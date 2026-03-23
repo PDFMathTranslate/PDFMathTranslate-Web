@@ -1,22 +1,13 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: '/api',
+    baseURL: '/v1',
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
 export default {
-    uploadFile(file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        return apiClient.post('/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-    },
     translate(params) {
         const formData = new FormData();
         for (const key in params) {
@@ -31,28 +22,24 @@ export default {
         });
     },
     getStatus(taskId) {
-        return apiClient.get(`/status/${taskId}`);
+        return apiClient.get(`/translate/${taskId}`);
     },
     cancelTranslation(taskId) {
-        return apiClient.post(`/cancel/${taskId}`);
+        return apiClient.post(`/translate/${taskId}/stop`);
     },
     getConfig() {
         return apiClient.get('/config');
     },
     getHealth() {
-        return apiClient.get('/health');
-    },
-    downloadTaskResult(taskId) {
-        return apiClient.get(`/download_task/${taskId}`, { responseType: 'blob' });
+        return apiClient.get('/status');
     },
     downloadTaskMono(taskId) {
-        return apiClient.get(`/download_task/${taskId}/mono`, { responseType: 'blob' });
+        return apiClient.get(`/translate/${taskId}/download/mono`, { responseType: 'blob' });
     },
     downloadTaskDual(taskId) {
-        return apiClient.get(`/download_task/${taskId}/dual`, { responseType: 'blob' });
+        return apiClient.get(`/translate/${taskId}/download/dual`, { responseType: 'blob' });
     },
-    // Check if a task still exists (for recent files validation)
     checkTaskExists(taskId) {
-        return apiClient.get(`/status/${taskId}`);
+        return apiClient.get(`/translate/${taskId}`);
     }
 };

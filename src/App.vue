@@ -718,34 +718,37 @@ const startTranslation = async (task = null) => {
   }
   
   try {
-    let fileId
-    
-    if (translationParams.source === 'File') {
-      // 1. Upload File
-      const fileToUpload = task ? task.file : selectedFile.value
-      const uploadResponse = await api.uploadFile(fileToUpload)
-      fileId = uploadResponse.data.file_id
-    } else {
-      fileId = translationParams.url
-    }
-    
-    // 2. Start Translation
+    // Build translation params with file included
+    const fileToUpload = task ? task.file : selectedFile.value
     const params = {
-      ...translationParams,
-      file_id: fileId,
-      lang_from: translationParams.langFrom,
-      lang_to: translationParams.langTo,
+      file: fileToUpload,
+      lang_in: translationParams.langFrom,
+      lang_out: translationParams.langTo,
       service: translationParams.service,
     }
-    
+
+    // Include optional params from translationParams
+    if (translationParams.pages) params.pages = translationParams.pages
+    if (translationParams.thread) params.thread = translationParams.thread
+    if (translationParams.prompt) params.prompt = translationParams.prompt
+
+    // Pass extra data as JSON in 'data' field
+    const data = {}
+    if (translationParams.envs) data.envs = translationParams.envs
+    if (translationParams.skip_subset_fonts) data.skip_subset_fonts = translationParams.skip_subset_fonts
+    if (translationParams.ignore_cache) data.ignore_cache = translationParams.ignore_cache
+    if (Object.keys(data).length > 0) {
+      params.data = JSON.stringify(data)
+    }
+
     Object.keys(params).forEach(key => {
       if (params[key] === undefined || params[key] === '') {
         delete params[key]
       }
     })
-    
+
     const translateResponse = await api.translate(params)
-    const newTaskId = translateResponse.data.task_id
+    const newTaskId = translateResponse.data.id
     
     if (task) {
       task.taskId = newTaskId
@@ -781,51 +784,44 @@ const pollStatus = async (task = null) => {
   try {
     const response = await api.getStatus(currentTaskId)
     const status = response.data.status
-    const newLogs = response.data.logs || []
-    
+    const progress = response.data.progress || {}
+    const progressPct = progress.total > 0
+      ? Math.round((progress.current / progress.total) * 100)
+      : 0
+
     if (task) {
       task.status = status
-      task.logs = newLogs
-      // Update global logs for display if this is the current task
       if (batchQueue.value[currentBatchIndex.value] === task) {
-        logs.value = newLogs
         taskStatus.value = status
       }
-      
-      // Calculate progress for task
-      // We need to parse logs to get progress for the task object too
-      // Reuse processLogs logic but for the task object?
-      // For now, just rely on the global 'overallProgress' which is updated by the 'logs' watcher
-      // and sync it back to the task
-      if (overallProgress.value !== null) {
-        task.progress = overallProgress.value
-      }
-      
-      // Also sync stages
-      if (stages.value.length > 0) {
-        task.stages = stages.value
+      if (progress.total > 0) {
+        task.progress = progressPct
+        overallProgress.value = progressPct
       }
     } else {
       taskStatus.value = status
-      logs.value = newLogs
+      if (progress.total > 0) {
+        overallProgress.value = progressPct
+      }
     }
-    
+
     if (status === 'completed') {
+      const hasResult = response.data.has_result
       if (task) {
         task.progress = 100
-        task.monoPdfUrl = response.data.mono_pdf_path ? `/api/download_task/${currentTaskId}/mono` : null
-        task.dualPdfUrl = response.data.dual_pdf_path ? `/api/download_task/${currentTaskId}/dual` : null
-        
+        task.monoPdfUrl = hasResult ? `/v1/translate/${currentTaskId}/download/mono` : null
+        task.dualPdfUrl = hasResult ? `/v1/translate/${currentTaskId}/download/dual` : null
+
         // Save to recent files
         saveToRecentFiles(
           currentTaskId,
           task.file.name,
           translationParams.langFrom,
           translationParams.langTo,
-          !!response.data.mono_pdf_path,
-          !!response.data.dual_pdf_path
+          hasResult,
+          hasResult
         ).catch(err => console.error('Failed to save recent file:', err))
-        
+
         // Move to next task
         currentBatchIndex.value++
         setTimeout(processNextTask, 500)
@@ -833,14 +829,9 @@ const pollStatus = async (task = null) => {
         isTranslating.value = false
         serviceStatus.value = 'ready'
         overallProgress.value = 100
-        if (response.data.mono_pdf_path) {
-          monoPdfUrl.value = `/api/download_task/${currentTaskId}/mono`
-        }
-        if (response.data.dual_pdf_path) {
-          dualPdfUrl.value = `/api/download_task/${currentTaskId}/dual`
-        }
-        if (!monoPdfUrl.value && !dualPdfUrl.value) {
-          downloadUrl.value = `/api/download_task/${currentTaskId}`
+        if (hasResult) {
+          monoPdfUrl.value = `/v1/translate/${currentTaskId}/download/mono`
+          dualPdfUrl.value = `/v1/translate/${currentTaskId}/download/dual`
         }
 
         const filename = selectedFile.value?.name || translationParams.url || 'Translated PDF'
@@ -849,8 +840,8 @@ const pollStatus = async (task = null) => {
           filename,
           translationParams.langFrom,
           translationParams.langTo,
-          !!response.data.mono_pdf_path,
-          !!response.data.dual_pdf_path
+          hasResult,
+          hasResult
         ).catch(err => console.error('Failed to save recent file:', err))
 
         if (monoPdfUrl.value) downloadMono()
@@ -957,7 +948,7 @@ const handleDownload = async (downloadFn) => {
 }
 
 const downloadResult = async () => {
-    await handleDownload(api.downloadTaskResult);
+    await handleDownload(api.downloadTaskMono);
 }
 
 const downloadMono = async () => {
@@ -1211,7 +1202,7 @@ const saveToRecentFiles = async (taskIdValue, filename, langFrom, langTo, hasMon
   // Capture thumbnail from the mono PDF
   let thumbnail = null
   if (hasMonoPdf) {
-    thumbnail = await capturePdfThumbnail(`/api/download_task/${taskIdValue}/mono`)
+    thumbnail = await capturePdfThumbnail(`/v1/translate/${taskIdValue}/download/mono`)
   }
   
   // Add new entry at the beginning
@@ -1647,7 +1638,7 @@ initRecentFiles()
                     <!-- Fallback to live PDF if server available and no thumbnail -->
                     <VuePdfEmbed 
                       v-else-if="file.serverAvailable !== false"
-                      :source="`/api/download_task/${file.taskId}/mono`"
+                      :source="`/v1/translate/${file.taskId}/download/mono`"
                       class="w-full h-full object-cover"
                     />
                     <!-- Placeholder when no thumbnail and server unavailable -->
