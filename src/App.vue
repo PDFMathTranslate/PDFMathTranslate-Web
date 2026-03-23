@@ -181,6 +181,15 @@ const fetchHealthInfo = async () => {
       ...data,
       active_tasks: data.active_jobs ?? data.active_tasks ?? 0,
       total_tasks: data.total_jobs ?? data.total_tasks ?? 0,
+      // Flatten nested cpu/memory into the shape ProjectInfo expects
+      cpu_percent: data.cpu?.usage_percent ?? undefined,
+      memory_percent: data.cpu?.memory?.percent ?? undefined,
+      memory_used_gb: data.cpu?.memory?.used_mb != null
+        ? (data.cpu.memory.used_mb / 1024).toFixed(1)
+        : undefined,
+      memory_total_gb: data.cpu?.memory?.total_mb != null
+        ? (data.cpu.memory.total_mb / 1024).toFixed(1)
+        : undefined,
     }
     if (data.status) {
       // Backend returns "ok", frontend expects "ready"
