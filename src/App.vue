@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import api from '@/services/api'
+import { serviceToBackendName, unsupportedServices } from '@/constants/services'
 import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check, Square, AlertCircle, FileText, Link as LinkIcon, Trash2, Zap, X } from 'lucide-vue-next'
 import { defineAsyncComponent } from 'vue'
 const VuePdfEmbed = defineAsyncComponent(() => import('vue-pdf-embed'))
@@ -330,7 +331,7 @@ const defaultPreferences = {
   source: 'File',
   langFrom: 'English',
   langTo: 'Simplified Chinese',
-  service: 'SiliconFlowFree', // Default service
+  service: 'Google', // Default service
   url: '', // URL for Link source type
   // Translation backend mode: 'stable' (pdf2zh) or 'experimental' (pdf2zh_next)
   translationBackend: 'stable', // Default to stable mode
@@ -459,11 +460,10 @@ watch(
     const currentPreferences = loadPreferences(currentBackend)
     const savedService = currentPreferences?.service || translationParams.service
     
-    // Check for deprecated services and reset to default
-    const deprecatedServices = ['Google', 'Bing']
-    if (savedService && deprecatedServices.includes(savedService)) {
-      console.log(`Service '${savedService}' is deprecated, switching to SiliconFlowFree`)
-      translationParams.service = 'SiliconFlowFree'
+    // Migrate unsupported services (e.g. SiliconFlowFree from v2) to Google
+    if (savedService && unsupportedServices.includes(savedService)) {
+      console.log(`Service '${savedService}' is unsupported in stable mode, switching to Google`)
+      translationParams.service = 'Google'
     }
     
     // If user has stable saved but it's not available, switch to experimental
@@ -737,7 +737,7 @@ const startTranslation = async (task = null) => {
       file: fileToUpload,
       lang_in: translationParams.langFrom,
       lang_out: translationParams.langTo,
-      service: translationParams.service,
+      service: serviceToBackendName[translationParams.service] || translationParams.service,
     }
 
     // Include optional params from translationParams

@@ -85,6 +85,38 @@ export const serviceFields = {
         { name: 'claude_code_path', label: 'serviceFields.cliPath', type: 'text', placeholder: 'claude' },
         { name: 'claude_code_model', label: 'serviceFields.model', type: 'text', placeholder: 'sonnet' },
     ],
-    SiliconFlowFree: [],
-    // NOTE: Google and Bing are deprecated and removed from supported services
 }
+
+// Maps frontend service keys to backend translator `name` values.
+// Backend names come from each translator class's `name` attribute in pdf2zh/translator.py.
+export const serviceToBackendName = {
+    Google: 'google',
+    Bing: 'bing',
+    DeepL: 'deepl',
+    DeepLX: 'deeplx',
+    Ollama: 'ollama',
+    Xinference: 'xinference',
+    OpenAI: 'openai',
+    AzureOpenAI: 'azure-openai',
+    ModelScope: 'modelscope',
+    Zhipu: 'zhipu',
+    SiliconFlow: 'silicon',
+    TencentMechineTranslation: 'tencent',
+    Gemini: 'gemini',
+    Azure: 'azure',
+    AnythingLLM: 'anythingllm',
+    Dify: 'dify',
+    Grok: 'grok',
+    Groq: 'groq',
+    DeepSeek: 'deepseek',
+    QwenMt: 'qwen-mt',
+    OpenAICompatible: 'openailiked',
+    AliyunDashScope: 'openailiked',
+    ClaudeCode: 'openailiked',
+    MiniMax: 'minimax',
+    '302.AI': '302ai',
+    'Argos Translate': 'argos',
+}
+
+// Services from v2 that should be migrated to Google (unsupported in stable/fast mode)
+export const unsupportedServices = ['SiliconFlowFree', 'SiliconFlow', 'Bing']
