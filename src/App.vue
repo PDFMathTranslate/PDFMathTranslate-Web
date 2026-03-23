@@ -15,7 +15,8 @@ import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import api from '@/services/api'
 import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check, Square, AlertCircle, FileText, Link as LinkIcon, Trash2, Zap, X } from 'lucide-vue-next'
-import VuePdfEmbed from 'vue-pdf-embed'
+import { defineAsyncComponent } from 'vue'
+const VuePdfEmbed = defineAsyncComponent(() => import('vue-pdf-embed'))
 import {
   Tooltip,
   TooltipContent,
@@ -1387,9 +1388,10 @@ initRecentFiles()
                 </div>
               </CardHeader>
               <CardContent>
-                <TranslationOptions 
-                  v-model="translationParams" 
-                  :config="config" 
+                <TranslationOptions
+                  :model-value="translationParams"
+                  @update:model-value="v => Object.assign(translationParams, v)"
+                  :config="config"
                   @file-selected="handleFileSelected" 
                   @files-selected="handleFileSelected"
                   @open-service-settings="handleOpenServiceSettings" 
@@ -1398,9 +1400,10 @@ initRecentFiles()
             </Card>
 
             <!-- Service Changer Card -->
-            <ServiceChangerCard 
+            <ServiceChangerCard
               v-if="!isTranslating && overallProgress === null && !isTranslationComplete && taskStatus !== 'failed' && !isBatchMode"
-              v-model="translationParams" 
+              :model-value="translationParams"
+              @update:model-value="v => Object.assign(translationParams, v)"
               :config="config"
             />
           </div>
@@ -1727,14 +1730,15 @@ initRecentFiles()
               </Button>
             </CardHeader>
             <CardContent>
-              <ApplicationSettings v-model="translationParams" :config="config" :open-accordion="openAccordionItem" />
+              <ApplicationSettings :model-value="translationParams" @update:model-value="v => Object.assign(translationParams, v)" :config="config" :open-accordion="openAccordionItem" />
             </CardContent>
           </Card>
 
           <!-- Dev Mode Advanced Settings -->
-          <DevSettings 
-            v-if="devMode && config?.all_params" 
-            v-model="translationParams" 
+          <DevSettings
+            v-if="devMode && config?.all_params"
+            :model-value="translationParams"
+            @update:model-value="v => Object.assign(translationParams, v)"
             :config="config"
           />
         </div>

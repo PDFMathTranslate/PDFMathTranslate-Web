@@ -113,13 +113,13 @@ onBeforeUnmount(() => {
 
         <!-- Expanded Content -->
         <div 
-          class="grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
+          class="grid transition-[grid-template-rows] duration-200 ease-in-out"
           :class="isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'"
           @click.stop
         >
           <div class="overflow-hidden">
             <div 
-              class="peek-content p-6 space-y-6 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              class="peek-content p-6 space-y-6 transition-all duration-200 ease-in-out"
               :class="isExpanded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'"
             >
               <!-- Service Selector -->
