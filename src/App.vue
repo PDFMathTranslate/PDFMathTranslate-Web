@@ -741,6 +741,7 @@ const startTranslation = async (task = null) => {
       lang_in: translationParams.langFrom,
       lang_out: translationParams.langTo,
       service: translationParams.service,
+      backend: translationParams.translationBackend || 'fast',
     }
 
     // Include optional params from translationParams
@@ -748,9 +749,8 @@ const startTranslation = async (task = null) => {
     if (translationParams.thread) params.thread = translationParams.thread
     if (translationParams.prompt) params.prompt = translationParams.prompt
 
-    // Pass extra data as JSON in 'data' field
+    // Pass extra data as JSON in 'data' field for complex/nested values
     const data = {}
-    if (translationParams.translationBackend) data.backend = translationParams.translationBackend
     if (translationParams.envs) data.envs = translationParams.envs
     if (translationParams.skip_subset_fonts) data.skip_subset_fonts = translationParams.skip_subset_fonts
     if (translationParams.ignore_cache) data.ignore_cache = translationParams.ignore_cache
