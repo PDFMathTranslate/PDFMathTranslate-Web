@@ -1434,7 +1434,7 @@ initRecentFiles()
       @go-home="handleGoHome"
     />
     
-    <main class="container py-10 mx-auto px-6 flex-1" :class="{ 'my-6': isWco }">
+    <main class="container py-10 pb-[3.5em] mx-auto px-6 flex-1" :class="{ 'my-6': isWco }">
       <Transition name="fade" mode="out-in">
         <div
           v-if="!showSettings"
