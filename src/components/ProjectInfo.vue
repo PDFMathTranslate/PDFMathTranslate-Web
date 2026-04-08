@@ -306,8 +306,12 @@ watch(showErrorTooltip, (newVal) => {
 </script>
 
 <template>
-  <footer class="py-2 border-t mx-6">
-    <div class="flex flex-col justify-between gap-3 md:flex-row items-center text-xs text-muted-foreground">
+  <footer
+    class="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+  >
+    <div
+      class="mx-auto max-w-5xl px-6 py-2 flex flex-col justify-between gap-3 md:flex-row items-center text-xs text-muted-foreground"
+    >
       <div class="text-start flex items-center gap-2 md:flex-1">
         <TooltipProvider>
           <Tooltip>
