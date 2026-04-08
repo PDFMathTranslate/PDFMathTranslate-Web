@@ -49,12 +49,6 @@ const taskId = ref(null)
 const taskStatus = ref(null)
 const logs = ref([])
 const stages = ref([])
-const activeStageIndex = computed(() => {
-  const index = stages.value.findIndex(s => s.status === 'active')
-  if (index !== -1) return index
-  if (stages.value.length > 0 && stages.value.every(s => s.status === 'completed')) return stages.value.length - 1
-  return 0
-})
 const currentStage = ref(null)
 const downloadUrl = ref(null)
 const monoPdfUrl = ref(null)
@@ -685,6 +679,56 @@ const processLogs = (logEntries) => {
   }
 }
 
+const updateStageStateFromApi = (stagePayload, stageListRef, currentStageRef) => {
+  if (!stagePayload || !stagePayload.name) return
+
+  const stageName = stagePayload.name
+  const stageEvent = stagePayload.event
+  const stageProgress = typeof stagePayload.progress === 'number'
+    ? Math.max(0, Math.min(100, stagePayload.progress))
+    : null
+
+  let stageList = [...stageListRef.value]
+  let stageIndex = stageList.findIndex(s => s.name === stageName)
+
+  if (stageIndex === -1) {
+    stageList.push({
+      name: stageName,
+      percent: stageProgress ?? 0,
+      status: 'pending',
+      current: stagePayload.current ?? null,
+      total: stagePayload.total ?? null,
+    })
+    stageIndex = stageList.length - 1
+  }
+
+  stageList = stageList.map((s, index) => {
+    if (index !== stageIndex) return s
+    return {
+      ...s,
+      percent: stageProgress ?? s.percent ?? 0,
+      current: stagePayload.current ?? s.current ?? null,
+      total: stagePayload.total ?? s.total ?? null,
+    }
+  })
+
+  if (stageEvent === 'progress_start' || stageEvent === 'progress_update') {
+    stageList = stageList.map((s, index) => {
+      if (index < stageIndex) return { ...s, status: 'completed', percent: 100 }
+      if (index === stageIndex) return { ...s, status: 'active' }
+      return s.status === 'completed' ? s : { ...s, status: 'pending' }
+    })
+  } else if (stageEvent === 'progress_end') {
+    stageList = stageList.map((s, index) => {
+      if (index === stageIndex) return { ...s, status: 'completed', percent: 100 }
+      return s
+    })
+  }
+
+  stageListRef.value = stageList
+  currentStageRef.value = stageName
+}
+
 // Watch logs to extract progress
 watch(logs, (newLogs) => {
   processLogs(newLogs)
@@ -811,6 +855,7 @@ const pollStatus = async (task = null) => {
     const response = await api.getStatus(currentTaskId)
     const status = response.data.status
     const progress = response.data.progress || {}
+    const stage = response.data.stage || null
     const progressPct = progress.total > 0
       ? Math.round((progress.current / progress.total) * 100)
       : 0
@@ -824,10 +869,31 @@ const pollStatus = async (task = null) => {
         task.progress = progressPct
         overallProgress.value = progressPct
       }
+      if (stage) {
+        if (!Array.isArray(task.stages)) {
+          task.stages = []
+        }
+        if (!task.currentStage) {
+          task.currentStage = null
+        }
+        const taskStagesRef = { value: task.stages }
+        const taskCurrentStageRef = { value: task.currentStage }
+        updateStageStateFromApi(stage, taskStagesRef, taskCurrentStageRef)
+        task.stages = taskStagesRef.value
+        task.currentStage = taskCurrentStageRef.value
+
+        if (batchQueue.value[currentBatchIndex.value] === task) {
+          stages.value = [...task.stages]
+          currentStage.value = task.currentStage
+        }
+      }
     } else {
       taskStatus.value = status
       if (progress.total > 0) {
         overallProgress.value = progressPct
+      }
+      if (stage) {
+        updateStageStateFromApi(stage, stages, currentStage)
       }
     }
 
@@ -1511,15 +1577,12 @@ initRecentFiles()
               </div> -->
               
               <!-- Stages List -->
-              <div v-if="stages.length > 0 && taskStatus !== 'failed'" class="mt-4 h-9 overflow-hidden relative">
-                <div 
-                  class="transition-transform duration-500 ease-in-out absolute h-full top-0 left-0 flex gap-2"
-                  :style="{ transform: `translateX(-${activeStageIndex * 12.5}rem)` }"
-                >
+              <div v-if="stages.length > 0 && taskStatus !== 'failed'" class="mt-4">
+                <div class="flex flex-wrap gap-2">
                   <div 
                     v-for="(stage, index) in stages" 
                     :key="index" 
-                    class="flex items-center gap-2 text-sm px-3 rounded-md transition-colors w-48 flex-shrink-0 border"
+                    class="flex items-center gap-2 text-sm px-3 py-2 rounded-md transition-colors min-w-44 max-w-64 border"
                     :class="{
                       'bg-green-100 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400': stage.status === 'completed',
                       'bg-background border-primary text-foreground ring-1 ring-primary/20': stage.status === 'active',
@@ -1531,7 +1594,12 @@ initRecentFiles()
                        <Loader2 v-else-if="stage.status === 'active'" class="h-3.5 w-3.5 animate-spin text-primary" />
                        <div v-else class="h-1.5 w-1.5 rounded-full bg-muted-foreground/30"></div>
                      </div>
-                     <span class="truncate font-medium">{{ stage.name }}</span>
+                     <div class="min-w-0 flex-1">
+                       <div class="truncate font-medium">{{ stage.name }}</div>
+                       <div class="text-[11px] opacity-80">
+                         <span v-if="stage.current && stage.total">{{ stage.current }} / {{ stage.total }} · </span>{{ (stage.percent ?? 0).toFixed(0) }}%
+                       </div>
+                     </div>
                   </div>
                 </div>
               </div>
