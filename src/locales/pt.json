@@ -116,6 +116,7 @@
   },
   "shortcuts": {
     "title": "Atalhos",
+    "openFilePicker": "Abrir seletor de arquivos (Início)",
     "language": "Mudar idioma",
     "theme": "Alternar modo escuro",
     "settings": "Abrir configurações",

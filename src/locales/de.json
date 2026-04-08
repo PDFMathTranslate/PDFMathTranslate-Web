@@ -116,6 +116,7 @@
   },
   "shortcuts": {
     "title": "Tastenkürzel",
+    "openFilePicker": "Dateiauswahl öffnen (Startseite)",
     "language": "Sprache wechseln",
     "theme": "Dunkelmodus umschalten",
     "settings": "Einstellungen öffnen",

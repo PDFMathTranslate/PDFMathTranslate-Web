@@ -152,6 +152,7 @@
   },
   "shortcuts": {
     "title": "Shortcuts",
+    "openFilePicker": "Open file picker (Home)",
     "language": "Switch Language",
     "theme": "Toggle Dark Mode",
     "settings": "Toggle Settings",

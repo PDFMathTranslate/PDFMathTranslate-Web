@@ -477,6 +477,9 @@ watch(showErrorTooltip, (newVal) => {
                 
                 <span class="text-muted-foreground">{{ t('shortcuts.settings') }}</span> 
                 <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">⌘/Ctrl + P / ,</span>
+
+                <span class="text-muted-foreground">{{ t('shortcuts.openFilePicker') }}</span>
+                <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">Space</span>
                 
                 <span class="text-muted-foreground">{{ t('shortcuts.theme') }}</span> 
                 <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">⌘/Ctrl + D</span>

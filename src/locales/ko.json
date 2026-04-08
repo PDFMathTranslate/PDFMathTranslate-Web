@@ -116,6 +116,7 @@
   },
   "shortcuts": {
     "title": "단축키",
+    "openFilePicker": "파일 선택 열기(홈)",
     "language": "언어 전환",
     "theme": "다크 모드 전환",
     "settings": "설정 열기",

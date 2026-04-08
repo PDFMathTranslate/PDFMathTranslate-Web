@@ -117,6 +117,7 @@
   },
   "shortcuts": {
     "title": "快捷鍵",
+    "openFilePicker": "開啟檔案選擇器（首頁）",
     "language": "切換語言",
     "theme": "切換深色模式",
     "settings": "開啟設定",

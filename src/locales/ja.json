@@ -117,6 +117,7 @@
   },
   "shortcuts": {
     "title": "ショートカット",
+    "openFilePicker": "ファイル選択を開く（ホーム）",
     "language": "言語を切り替え",
     "theme": "ダークモード切り替え",
     "settings": "設定を開く",

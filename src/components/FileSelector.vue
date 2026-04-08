@@ -93,6 +93,7 @@ const handleFileSelect = (e) => {
   <div class="w-full mt-2">
     <div v-if="source === 'File'">
       <div
+        id="file-dropbox"
         class="file-dropbox relative group flex flex-col items-center justify-center w-full h-96 border-2 border-dashed border-primary/50 rounded-lg cursor-pointer transition-all duration-300"
         :class="[
           'hover:border-primary hover:bg-muted/50',

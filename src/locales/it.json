@@ -116,6 +116,7 @@
   },
   "shortcuts": {
     "title": "Scorciatoie",
+    "openFilePicker": "Apri selettore file (Home)",
     "language": "Cambia lingua",
     "theme": "Attiva/disattiva modalità scura",
     "settings": "Apri impostazioni",

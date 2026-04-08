@@ -1076,6 +1076,22 @@ onKeyStroke(['l', 'L'], (e) => {
   }
 })
 
+// Home page: open file picker by pressing Space
+onKeyStroke(' ', (e) => {
+  // Only on home (index) view, and only when the File source selector is visible
+  if (!isOnIndex.value || showSettings.value || translationParams.source !== 'File') return
+
+  // Don't steal Space from inputs/editors
+  const target = e.target
+  if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) return
+
+  // Ignore modified key combos
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+
+  e.preventDefault() // prevent page scroll
+  document.getElementById('file-dropbox')?.click()
+})
+
 // Download shortcuts
 onKeyStroke('1', (e) => {
   if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
