@@ -2,6 +2,7 @@
 
 A Vue 3 single-page application for translating math-heavy PDF documents. Upload a PDF, choose a target language and translation service, and download the translated result in mono or dual-page layout.
 
+![img](./misc/web.png)
 ## Features
 
 - PDF upload and translation with math content preservation
